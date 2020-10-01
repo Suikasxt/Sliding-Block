@@ -120,7 +120,7 @@ class solvingThread(QThread):
 		
 	def run(self):
 		self.worker = subprocess.Popen(Worker, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-		self.worker.stdin.write((str(self.width) + ' ' + str(self.height) + '\n').encode(encoding='utf-8'))
+		self.worker.stdin.write((str(self.height) + ' ' + str(self.width) + '\n').encode(encoding='utf-8'))
 		for x in self.state:
 			self.worker.stdin.write((str(x) + ' ').encode(encoding='utf-8'))
 		self.worker.stdin.write('\n'.encode(encoding='utf-8'))
@@ -171,6 +171,7 @@ class tools(QWidget):
 	def solve(self):
 		if (self.solving):
 			self.solveButton.setText('Solve')
+			self.thread.worker.terminate()
 			self.thread.terminate()
 			return
 			
