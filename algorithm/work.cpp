@@ -41,8 +41,7 @@ int main(){
 			}
 		}
 		//输出一行n*m个数，使用空格隔开
-		for (int i = 0; i < n*m; i++) printf("%d ", a[i]);
-		printf("\n");
+		printf("%d\n", a[x*m+y]);
 		//刷新缓冲区
 		fflush(stdout);
 	}

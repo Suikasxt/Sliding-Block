@@ -4,30 +4,20 @@
 import sys
 import random
 import subprocess
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QHBoxLayout, QVBoxLayout, QApplication, QLineEdit, QTextEdit, QLabel, QMessageBox
-from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QPushButton, QHBoxLayout, QVBoxLayout, QApplication, QLineEdit, QTextEdit, QLabel, QMessageBox
+from PyQt5.QtCore import pyqtSignal, QThread, Qt
 
+waitTime = 1000
+animateTime = 300
 Worker = 'algorithm\work.exe'
+Size = 150
+MaxSize = 900
 
-class gameWidget(QWidget):
-	def __init__(self):
-		super().__init__()
-		self.grid = QGridLayout()
-		self.widgets = []
-		self.setLayout(self.grid)
+class QLabelCenter(QLabel):
+	def __init__(self, text):
+		super().__init__(text)
+		self.setAlignment(Qt.AlignCenter)
 	
-	def initUI(self, width, height, state):
-		for w in self.widgets:
-			w.setParent(None)
-		self.widgets = []
-		
-		positions = [(i, j) for i in range(width) for j in range(height)]
-		for position, number in zip(positions, state):
-			if number!=0:
-				button = QPushButton(str(number))
-				self.grid.addWidget(button, *position)
-				self.widgets.append(button)
-
 class myEdit(QWidget):
 	def __init__(self, label, text, type = 0):
 		super().__init__()
@@ -35,7 +25,7 @@ class myEdit(QWidget):
 		hlayout = QHBoxLayout()
 		self.setLayout(hlayout)
 		
-		self.label = QLabel(label)
+		self.label = QLabelCenter(label)
 		if type == 0:
 			self.edit = QLineEdit(text)
 		elif type == 1:
@@ -43,32 +33,107 @@ class myEdit(QWidget):
 		hlayout.addWidget(self.label, 1)
 		hlayout.addWidget(self.edit, 3)
 
-class solvingThread(QThread):
-	gameMove = pyqtSignal(int, int, list)
+class block(QWidget):
+	pushSign = pyqtSignal(int)
+	def __init__(self, parent, number, size):
+		super().__init__(parent)
+		self.number = number
+		layout = QHBoxLayout()
+		self.setLayout(layout)
+		layout.addWidget(QLabelCenter(str(number)))
+		self.setFixedSize(size, size)
+	def mousePressEvent(self, QMouseEvent):
+		self.pushSign.emit(self.number)
 	
-	def __init__(self, parent, width, height, state):
+class moveThread(QThread):
+	blockMoveSign = pyqtSignal(float)
+		
+	def __init__(self, parent, speed):
+		super(moveThread, self).__init__(parent)
+		self.speed = speed
+	def run(self):
+		T = 30
+		for i in range(T):
+			self.blockMoveSign.emit((i+1)/T)
+			self.msleep(int(animateTime/T/self.speed))
+
+class gameWidget(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.widgets = []
+	
+	def initUI(self, width, height, state):
+		for w in self.widgets:
+			if w:
+				w.setParent(None)
+		self.widthNumber = width
+		self.heightNumber = height
+		self.state = state
+		self.widgets = [None] * (width*height)
+		
+		if (Size*max(width, height) < MaxSize):
+			size = Size
+		else:
+			size = MaxSize//max(width, height)
+		self.blockSize = size
+		self.setFixedSize(size*width, size*height)
+		
+		
+		positions = [(i, j) for i in range(height) for j in range(width)]
+		for position, number in zip(positions, state):
+			if number!=0:
+				item = block(self, number, size)
+				item.pushSign.connect(self.blockMove)
+				item.show()
+				item.move(position[1]*size, position[0]*size)
+				self.widgets[position[0] * width + position[1]] = item
+		
+	def blockMove(self, number, speed=1):
+		for i in range(self.widthNumber * self.heightNumber):
+			if self.state[i] == number:
+				pos = i
+			elif self.state[i] == 0:
+				pos0 = i
+		if (abs(pos//self.widthNumber - pos0//self.widthNumber) + abs(pos%self.widthNumber - pos0%self.widthNumber) > 1):
+			return
+		
+		w = self.widgets[pos]
+		def blockMoveAnimate(p):
+			#print(p)
+			w.move((pos%self.widthNumber*(1-p) + pos0%self.widthNumber*p) * self.blockSize,
+						(pos//self.widthNumber*(1-p) + pos0//self.widthNumber*p) * self.blockSize)
+		animate = moveThread(self, speed)
+		animate.blockMoveSign.connect(blockMoveAnimate)
+		animate.start()
+		self.widgets[pos], self.widgets[pos0] = (self.widgets[pos0], self.widgets[pos])
+		self.state[pos], self.state[pos0] = (self.state[pos0], self.state[pos])
+
+class solvingThread(QThread):
+	gameMoveSign = pyqtSignal(int, float)
+	
+	def __init__(self, parent, width, height, state, speed):
 		super(solvingThread, self).__init__(parent)
 		self.width = width
 		self.height = height
 		self.state = state
+		self.speed = speed
 		
 	def run(self):
-		self.worker = subprocess.Popen(Worker, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+		self.worker = subprocess.Popen(Worker, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 		self.worker.stdin.write((str(self.width) + ' ' + str(self.height) + '\n').encode(encoding='utf-8'))
 		for x in self.state:
 			self.worker.stdin.write((str(x) + ' ').encode(encoding='utf-8'))
 		self.worker.stdin.write('\n'.encode(encoding='utf-8'))
 		self.worker.stdin.flush()
 		while (True):
-			try:
-				self.sleep(1)
-				res = self.worker.stdout.readline().decode('utf-8')
-				print(res)
-				if (res[0] == 'O'):
-					break
-				self.gameMove.emit(self.width, self.height, [int(x) for x in res.split()])
-			except:
+			#try:
+			self.msleep(int(waitTime/self.speed))
+			res = self.worker.stdout.readline().decode('utf-8')
+			if (res[0] == 'O'):
 				break
+			self.gameMoveSign.emit(int(res), self.speed)
+			#except:
+			#	break
 		
 		self.worker.terminate()
 				
@@ -90,6 +155,7 @@ class tools(QWidget):
 		try:
 			self.width = int(self.widthEdit.edit.text())
 			self.height = int(self.heightEdit.edit.text())
+			self.speed = float(self.speedEdit.edit.text())
 			if stateCheck:
 				self.state = [int(x) for x in self.stateEdit.edit.toPlainText().split(',')]
 				
@@ -110,17 +176,18 @@ class tools(QWidget):
 			
 		if (not self.update()):
 			return
-		self.thread = solvingThread(self, self.width, self.height, self.state)
+		self.thread = solvingThread(self, self.width, self.height, self.state, self.speed)
 		self.thread.started.connect(self.threadStart)
 		self.thread.finished.connect(self.threadStop)
-		self.thread.gameMove.connect(self.game.initUI)
+		self.thread.gameMoveSign.connect(self.game.blockMove)
 		self.thread.start()
-		self.solveButton.setText('Stop')
 		
 	def threadStart(self):
 		self.solving = True
+		self.solveButton.setText('Stop')
 	def threadStop(self):
 		self.solving = False
+		self.solveButton.setText('Solve')
 		
 		
 	
@@ -143,6 +210,7 @@ class tools(QWidget):
 		
 		self.widthEdit = myEdit('Width', '3')
 		self.heightEdit = myEdit('Height', '3')
+		self.speedEdit = myEdit('Speed', '1')
 		self.stateEdit = myEdit('State', ', '.join(str(x) for x in self.getRandomState(3, 3)), 1)
 		self.solveButton = QPushButton('Solve')
 		self.solveButton.clicked.connect(self.solve)
@@ -153,6 +221,7 @@ class tools(QWidget):
 		
 		vlayout.addWidget(self.widthEdit)
 		vlayout.addWidget(self.heightEdit)
+		vlayout.addWidget(self.speedEdit)
 		vlayout.addWidget(self.stateEdit)
 		vlayout.addWidget(self.solveButton)
 		vlayout.addWidget(self.stateButton)
@@ -162,7 +231,7 @@ class tools(QWidget):
 		
 		
 
-class mainWindow(QWidget):
+class mainContent(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.initUI()
@@ -175,7 +244,14 @@ class mainWindow(QWidget):
 		self.tools = tools(self.game)
 		hlayout.addWidget(self.game)
 		hlayout.addWidget(self.tools)
-		self.show()
+		
+		
+class mainWindow(QMainWindow):
+	def __init__(self):
+		super().__init__()
+		self.setCentralWidget(mainContent())
+		file = open('main.qss', 'r')
+		self.setStyleSheet(file.read())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

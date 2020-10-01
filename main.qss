@@ -1,0 +1,125 @@
+QWidget{
+	font-size : 30px;
+	font : large "Times New Roman";
+	background: transparent;
+	border : none;
+	color : #4F4F4F;
+	margin : 0px;
+}
+mainWindow{
+	border-image : url("./img/background.jpg");
+}
+
+
+
+
+QPushButton{
+	background : rgba(72, 61, 139, 0.8);
+	color : #FFF5EE;
+	border: 5px solid #483D8B;
+	border-radius : 20px;
+	min-width : 120px;
+	min-height : 40px;
+	margin-left : auto;
+	margin-right : auto;
+}
+QLineEdit, QTextEdit, QDateEdit, QComboBox{
+	border: 5px solid #A2B5CD;
+	border-radius : 10px;
+	min-height : 40px;
+	background : rgba(202,225,255,0.5);
+	margin-top : 20px;
+	selection-background-color : #36480e;
+}
+QScrollArea{
+	border-radius : 20px;
+	background : rgb(0,0,0,0.5);
+}
+
+
+
+
+QTabWidget::tab-bar {
+	left:40px;
+}
+QTabBar::tab{
+	background : rgb(0,0,0,0.8);
+	margin-left: 5px;
+	padding: 5px;
+	border : 10px solid #000000;
+	border-top-left-radius : 20px;
+	border-top-right-radius : 20px;
+}
+QTabBar::tab:hover{
+	background : rgb(100,100,100,0.8);
+	color : black;
+}
+QTabBar::tab:!selected {
+	margin-top : 10px;
+}
+QTabWidget{
+	background : transparent;
+}
+QTabWidget::pane{
+	border : 10px solid black;
+	border-radius : 40px;
+}
+QStackedWidget{
+	background : rgb(0,0,0,0.5);
+}
+
+
+
+
+QMenuBar{
+	background : transparent;
+}
+QMenuBar::item{
+	margin-top : 10px;
+	margin-right : 30px;
+	border: 10px solid #101010;
+	background : #101010;
+	border : 10px solid black;
+	padding : 10px;
+	border-radius : 20px;
+}
+QMenu::item{
+	background : qlineargradient(x1:0, y1:0, x2:0, y2:1,stop:0 #101010, stop:1 #000000);
+	padding : 15px;
+}
+QMenu::item:selected{
+	font-weight : bold;
+	padding : 15px;
+}
+QLabel{
+	font-weight : bold;
+	color: #363636;
+	alignment : center;
+}
+
+
+QInputDialog, QMessageBox{
+}
+
+
+
+QComboBox::drop-down{
+	background : transparent;
+}
+QScrollBar{
+	width : 10px;
+}
+QScrollBar::sub-line{
+	background : gray;
+}
+QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+    background: transparent;
+}
+
+
+block QLabelCenter{
+	font-size: 50px;
+	background-color: rgba(	255, 248, 220,0.5);
+	border: 3px solid #EEE;
+	border-radius: 20px;
+}
