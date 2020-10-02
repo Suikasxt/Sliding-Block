@@ -11,7 +11,7 @@ waitTime = 1000
 animateTime = 300
 Worker = 'algorithm\work.exe'
 Size = 150
-MaxSize = 900
+MaxSize = 800
 
 class QLabelCenter(QLabel):
 	def __init__(self, text):
@@ -70,6 +70,7 @@ class gameWidget(QWidget):
 		self.heightNumber = height
 		self.state = state
 		self.widgets = [None] * (width*height)
+		self.animate = [None] * (width*height)
 		
 		if (Size*max(width, height) < MaxSize):
 			size = Size
@@ -102,9 +103,12 @@ class gameWidget(QWidget):
 			#print(p)
 			w.move((pos%self.widthNumber*(1-p) + pos0%self.widthNumber*p) * self.blockSize,
 						(pos//self.widthNumber*(1-p) + pos0//self.widthNumber*p) * self.blockSize)
-		animate = moveThread(self, speed)
-		animate.blockMoveSign.connect(blockMoveAnimate)
-		animate.start()
+						
+		if (self.animate[number]):
+			self.animate[number].terminate()
+		self.animate[number] = moveThread(self, speed)
+		self.animate[number].blockMoveSign.connect(blockMoveAnimate)
+		self.animate[number].start()
 		self.widgets[pos], self.widgets[pos0] = (self.widgets[pos0], self.widgets[pos])
 		self.state[pos], self.state[pos0] = (self.state[pos0], self.state[pos])
 
@@ -126,17 +130,41 @@ class solvingThread(QThread):
 		self.worker.stdin.write('\n'.encode(encoding='utf-8'))
 		self.worker.stdin.flush()
 		while (True):
-			#try:
-			self.msleep(int(waitTime/self.speed))
-			res = self.worker.stdout.readline().decode('utf-8')
-			if (res[0] == 'O'):
+			try:
+				self.msleep(int(waitTime/self.speed))
+				res = self.worker.stdout.readline().decode('utf-8')
+				if (res[0] == 'O'):
+					break
+				self.gameMoveSign.emit(int(res), self.speed)
+			except:
 				break
-			self.gameMoveSign.emit(int(res), self.speed)
-			#except:
-			#	break
 		
 		self.worker.terminate()
-				
+		
+class myGridEdit(QWidget):
+	def __init__(self, width, height, state):
+		super().__init__()
+		self.grid = QGridLayout()
+		self.setLayout(self.grid)
+		self.myWidget = []
+		self.setState(width, height, state)
+	
+	def setState(self, width, height, state):
+		for w in self.myWidget:
+			if w:
+				w.setParent(None)
+		self.myWidget = []
+		for i in range(height):
+			for j in range(width):
+				edit = QLineEdit(str(state[i*width+j]))
+				self.grid.addWidget(edit, *(i,j))
+				self.myWidget.append(edit)
+	def getState(self):
+		res = []
+		for w in self.myWidget:
+			res.append(int(w.text()))
+		return res
+		
 class tools(QWidget):
 	def __init__(self, game):
 		super().__init__()
@@ -157,7 +185,7 @@ class tools(QWidget):
 			self.height = int(self.heightEdit.edit.text())
 			self.speed = float(self.speedEdit.edit.text())
 			if stateCheck:
-				self.state = [int(x) for x in self.stateEdit.edit.toPlainText().split(',')]
+				self.state = self.stateEdit.getState()
 				
 				assert len(self.state) == self.width*self.height
 				tmp = self.state.copy()
@@ -201,7 +229,7 @@ class tools(QWidget):
 	def setRandomState(self):
 		if (not self.getParameter(False)):
 			return
-		self.stateEdit.edit.setPlainText(', '.join(str(x) for x in self.getRandomState(self.width, self.height)))
+		self.stateEdit.setState(self.width, self.height, self.getRandomState(self.width, self.height))
 		return self.update()
 	
 	
@@ -212,7 +240,7 @@ class tools(QWidget):
 		self.widthEdit = myEdit('Width', '3')
 		self.heightEdit = myEdit('Height', '3')
 		self.speedEdit = myEdit('Speed', '1')
-		self.stateEdit = myEdit('State', ', '.join(str(x) for x in self.getRandomState(3, 3)), 1)
+		self.stateEdit = myGridEdit(3, 3, self.getRandomState(3, 3))
 		self.solveButton = QPushButton('Solve')
 		self.solveButton.clicked.connect(self.solve)
 		self.stateButton = QPushButton('Generate Random State')
