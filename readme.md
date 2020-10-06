@@ -1,4 +1,4 @@
-本项目提供了一个九宫格求解AI的交换框架，适用于windows系统。[视频](https://cloud.tsinghua.edu.cn/f/b903cd01dcc74b0d9a35/)
+本项目提供了一个九宫格求解AI的交互框架，适用于windows系统。[视频](https://cloud.tsinghua.edu.cn/f/b903cd01dcc74b0d9a35/)
 
 ## 使用方式
 

@@ -7,8 +7,8 @@ import subprocess
 from PyQt5.QtWidgets import QMainWindow, QWidget, QGridLayout, QPushButton, QHBoxLayout, QVBoxLayout, QApplication, QLineEdit, QTextEdit, QLabel, QMessageBox
 from PyQt5.QtCore import pyqtSignal, QThread, Qt
 
-waitTime = 1000
-animateTime = 300
+waitTime = 10**6
+animateTime = 3*10**5
 Worker = 'algorithm\work.exe'
 Size = 150
 MaxSize = 800
@@ -55,7 +55,7 @@ class moveThread(QThread):
 		T = 30
 		for i in range(T):
 			self.blockMoveSign.emit((i+1)/T)
-			self.msleep(int(animateTime/T/self.speed))
+			self.usleep(int(animateTime/T/self.speed))
 
 class gameWidget(QWidget):
 	def __init__(self):
@@ -131,7 +131,7 @@ class solvingThread(QThread):
 		self.worker.stdin.flush()
 		while (True):
 			try:
-				self.msleep(int(waitTime/self.speed))
+				self.usleep(int(waitTime/self.speed))
 				res = self.worker.stdout.readline().decode('utf-8')
 				if (res[0] == 'O'):
 					break
@@ -239,7 +239,7 @@ class tools(QWidget):
 		
 		self.widthEdit = myEdit('Width', '3')
 		self.heightEdit = myEdit('Height', '3')
-		self.speedEdit = myEdit('Speed', '1')
+		self.speedEdit = myEdit('Speed', '3')
 		self.stateEdit = myGridEdit(3, 3, self.getRandomState(3, 3))
 		self.solveButton = QPushButton('Solve')
 		self.solveButton.clicked.connect(self.solve)
