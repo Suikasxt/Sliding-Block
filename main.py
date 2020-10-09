@@ -14,7 +14,7 @@ Size = 150
 MaxSize = 800
 
 class QLabelCenter(QLabel):
-	def __init__(self, text):
+	def __init__(self, text = ''):
 		super().__init__(text)
 		self.setAlignment(Qt.AlignCenter)
 	
@@ -114,6 +114,7 @@ class gameWidget(QWidget):
 
 class solvingThread(QThread):
 	gameMoveSign = pyqtSignal(int, float)
+	resultSign = pyqtSignal(int, int)
 	
 	def __init__(self, parent, width, height, state, speed):
 		super(solvingThread, self).__init__(parent)
@@ -129,16 +130,24 @@ class solvingThread(QThread):
 			self.worker.stdin.write((str(x) + ' ').encode(encoding='utf-8'))
 		self.worker.stdin.write('\n'.encode(encoding='utf-8'))
 		self.worker.stdin.flush()
+		stepNumber = 0
+		timeUsed = 0
 		while (True):
 			try:
 				self.usleep(int(waitTime/self.speed))
 				res = self.worker.stdout.readline().decode('utf-8')
 				if (res[0] == 'O'):
+					result = res.split()
+					try:
+						stepNumber = int(result[1])
+						timeUsed = int(result[2])
+					except:
+						pass
 					break
 				self.gameMoveSign.emit(int(res), self.speed)
 			except:
 				break
-		
+		self.resultSign.emit(stepNumber, timeUsed)
 		self.worker.terminate()
 		
 class myGridEdit(QWidget):
@@ -196,6 +205,9 @@ class tools(QWidget):
 		except:
 			QMessageBox.information(self, 'Error', 'Data Error.')
 			return False
+	def resultChange(self, stepNumber, timeUsed):
+		self.resultLabel.setText('StepNumber: ' + str(stepNumber) + '  Time: ' + str(timeUsed/1000) + 's')
+		
 	def solve(self):
 		if (self.solving):
 			self.solveButton.setText('Solve')
@@ -208,6 +220,7 @@ class tools(QWidget):
 		self.thread = solvingThread(self, self.width, self.height, self.state, self.speed)
 		self.thread.started.connect(self.threadStart)
 		self.thread.finished.connect(self.threadStop)
+		self.thread.resultSign.connect(self.resultChange)
 		self.thread.gameMoveSign.connect(self.game.blockMove)
 		self.thread.start()
 		
@@ -241,6 +254,7 @@ class tools(QWidget):
 		self.heightEdit = myEdit('Height', '3')
 		self.speedEdit = myEdit('Speed', '3')
 		self.stateEdit = myGridEdit(3, 3, self.getRandomState(3, 3))
+		self.resultLabel = QLabelCenter('')
 		self.solveButton = QPushButton('Solve')
 		self.solveButton.clicked.connect(self.solve)
 		self.stateButton = QPushButton('Generate Random State')
@@ -252,6 +266,7 @@ class tools(QWidget):
 		vlayout.addWidget(self.heightEdit)
 		vlayout.addWidget(self.speedEdit)
 		vlayout.addWidget(self.stateEdit)
+		vlayout.addWidget(self.resultLabel)
 		vlayout.addWidget(self.solveButton)
 		vlayout.addWidget(self.stateButton)
 		vlayout.addWidget(self.updateButton)
