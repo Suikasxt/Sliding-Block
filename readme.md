@@ -1,5 +1,9 @@
 本项目提供了一个九宫格求解AI的交互框架，适用于windows系统。[视频](https://cloud.tsinghua.edu.cn/f/b903cd01dcc74b0d9a35/)
 
+预计用于软设大赛，judge.py调用方式为：
+
+python judge.py -ai algorithm/work.exe -d data0.in
+
 ## 使用方式
 
 + 确保下列依赖已经被安装：
