@@ -1,4 +1,8 @@
-本项目提供了一个九宫格求解AI的交互框架，适用于windows系统。[视频](https://cloud.tsinghua.edu.cn/f/b903cd01dcc74b0d9a35/)
+本项目提供了一个九宫格求解AI的交互框架，适用于windows系统。
+
+[6*6 视频](https://cloud.tsinghua.edu.cn/f/b903cd01dcc74b0d9a35/)
+
+[8*8 视频](https://cloud.tsinghua.edu.cn/f/7a834e1c73134a1487fa/)
 
 预计用于软设大赛，judge.py调用方式为：
 

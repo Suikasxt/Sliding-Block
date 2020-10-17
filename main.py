@@ -252,7 +252,7 @@ class tools(QWidget):
 		
 		self.widthEdit = myEdit('Width', '3')
 		self.heightEdit = myEdit('Height', '3')
-		self.speedEdit = myEdit('Speed', '3')
+		self.speedEdit = myEdit('Speed', '5')
 		self.stateEdit = myGridEdit(3, 3, self.getRandomState(3, 3))
 		self.resultLabel = QLabelCenter('')
 		self.solveButton = QPushButton('Solve')
