@@ -9,7 +9,7 @@ from PyQt5.QtCore import pyqtSignal, QThread, Qt
 
 waitTime = 10**6
 animateTime = 3*10**5
-Worker = 'algorithm\work.exe'
+Worker = '..\test.py'
 Size = 150
 MaxSize = 800
 
@@ -136,6 +136,7 @@ class solvingThread(QThread):
 			try:
 				self.usleep(int(waitTime/self.speed))
 				res = self.worker.stdout.readline().decode('utf-8')
+				print(res)
 				if (res[0] == 'O'):
 					result = res.split()
 					try:
