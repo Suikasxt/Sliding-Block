@@ -4,9 +4,7 @@
 
 [8*8 视频](https://cloud.tsinghua.edu.cn/f/7a834e1c73134a1487fa/)
 
-预计用于软设大赛，judge.py调用方式为：
-
-python judge.py -ai algorithm/work.exe -d data0.in
+编程挑战赛相关内容可以在problem文件夹找到
 
 ## 使用方式
 
