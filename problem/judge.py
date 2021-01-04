@@ -41,8 +41,8 @@ def judgeAnswer(H, W, S, a):
 			return 0, False
 	
 	#所有选手操作执行完毕，每个位置正确的方块可以获得100分
-	for i in range(H*W-1):
-		if (S[i] == i+1):
+	for i in range(H*W):
+		if (S[i] == (i+1)%(H*W)):
 			score += 100
 	return score, True
 	
