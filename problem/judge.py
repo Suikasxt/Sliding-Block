@@ -60,8 +60,10 @@ if __name__ == "__main__":
 		code = subprocess.Popen('./'+args.ai, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
 		Height, Width, State = getData(os.path.join(path, '%02d.in'%(i)))
 		answer = []
+		RE = False
+		Over = False
 		def run():
-			global answer
+			global answer, RE, Over
 			count = 0
 			code.stdin.write((str(Height) + ' ' + str(Width) + '\n'))
 			code.stdin.write((' '.join([str(x) for x in State]) + '\n'))
@@ -71,9 +73,12 @@ if __name__ == "__main__":
 				try:
 					res = code.stdout.readline()
 					if (res[0] == 'O'):
+						Over = True
+						code.kill()
 						break
 					answer.append(int(res))
 				except:
+					RE = True
 					break
 		th = threading.Thread(target=run)
 		th.start()
@@ -84,16 +89,16 @@ if __name__ == "__main__":
 
 		resultNow = ''
 		scoreNow, successful = judgeAnswer(Height, Width, State, answer)
-		if successful:
+		if Over and successful:
 			score += scoreNow
 		else:
 			status = code.poll()
-			if (status == 0):
+			if (status == 0 or Over):
 				resultNow = 'WrongAnswer'
-			elif (status == None):
-				resultNow = 'TimeLimitExceeded'
-			else:
+			elif (status != None or RE):
 				resultNow = 'RuntimeError'
+			else:
+				resultNow = 'TimeLimitExceeded'
 		code.kill()
 		if (resultNow and result==''):
 			result = resultNow
